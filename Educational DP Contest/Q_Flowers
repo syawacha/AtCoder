@@ -1,0 +1,76 @@
+#include <algorithm>
+#include <iostream>
+#include <iomanip>
+#include <cstring>
+#include <string>
+#include <vector>
+#include <queue>
+#include <cmath>
+#include <stack>
+#include <set>
+#include <map>
+typedef long long ll;
+using namespace std;
+
+class SegTree{
+public:
+  int N;
+  vector<ll> dat;
+  ll MIN = 0LL;
+
+  //コンストラクタ
+  SegTree(int n){
+    N = 1;
+    while(N < n) N *= 2;
+    for(int i = 0; i < 2 * N - 1; i++){
+      dat.push_back(MIN);
+    }
+  }
+
+  //k番目の値(0_indexed)をaに変更
+  void update(int k, ll a){
+    //葉の節点
+    k += N - 1;
+    dat[k] = a;
+    //登りながら更新
+    while(k > 0){
+      k = (k - 1) / 2;
+      dat[k] = max(dat[k * 2 + 1], dat[k * 2 + 2]);
+    }
+  }
+
+  //[a,b)の最小値
+  ll query(int a, int b){
+    return Query(a, b, 0, 0, N);
+  }
+
+  ll Query(int a, int b, int k, int l, int r){
+    if(r <= a || b <= l) return MIN;
+    if(a <= l && r <= b) return dat[k];
+    else{
+      ll v1 = Query(a, b, k * 2 + 1, l, (l + r) / 2);
+      ll v2 = Query(a, b, k * 2 + 2, (l + r) / 2, r);
+      return max(v1, v2);
+    }
+  }
+};
+
+int main(){
+  int N;
+  cin >> N;
+  int h[N];
+  ll a[N];
+  for(int i = 0; i < N; i++) cin >> h[i];
+  for(int i = 0; i < N; i++) cin >> a[i];
+  int max_h = *max_element(h, h + N);
+
+  SegTree sg = SegTree(max_h + 1);
+
+  for(int i = 0; i < N; i++){
+    ll mx = sg.query(0, h[i]);
+    sg.update(h[i], mx + a[i]);
+  }
+
+  cout << sg.query(0, max_h + 1) << endl;
+  return 0;
+}
